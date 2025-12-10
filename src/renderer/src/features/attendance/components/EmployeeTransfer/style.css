@@ -1,0 +1,28 @@
+.form-item-full-height .ant-form-item-row {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-item-full-height .ant-form-item-row .ant-form-item-label {
+  flex: 'none';
+}
+
+.form-item-full-height .ant-form-item-row .ant-form-item-control {
+  flex: 1;
+  height: 0;
+}
+
+.form-item-full-height .ant-form-item-row .ant-form-item-control .ant-spin-nested-loading,
+.form-item-full-height
+  .ant-form-item-row
+  .ant-form-item-control
+  .ant-spin-nested-loading
+  .ant-spin-container,
+.form-item-full-height .ant-form-item-row .ant-form-item-control .ant-form-item-control-input,
+.form-item-full-height
+  .ant-form-item-row
+  .ant-form-item-control
+  .ant-form-item-control-input-content {
+  height: 100%;
+}

@@ -1,0 +1,30 @@
+.page {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  /* align-items: center; */
+  padding: 1rem;
+}
+
+.page__container {
+  text-align: center;
+  margin-top: 4rem;
+}
+
+.page__status {
+  font-size: 10em;
+  font-weight: bolder;
+  color: #13c2c2;
+  line-height: 1;
+}
+
+.page__title {
+  font-size: 2em;
+  font-weight: bolder;
+  margin: 1rem 0;
+}
+
+.page__description {
+  margin-bottom: 2rem;
+}

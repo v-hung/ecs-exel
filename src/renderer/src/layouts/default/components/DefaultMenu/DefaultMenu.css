@@ -1,0 +1,51 @@
+/* Slide bar */
+.default-menu {
+  flex: 1;
+  position: sticky;
+  top: 0;
+  bottom: 0;
+  height: 100vh;
+  overflow-y: auto;
+  border-right: 1px solid #f0f0f0;
+}
+
+/* Toggle Button */
+.menu__toggle {
+  position: sticky;
+  top: 0;
+  display: flex;
+  background-color: #fff;
+  z-index: 10;
+  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 4px;
+}
+
+.default-menu.ant-layout-sider-light {
+  background-color: transparent;
+}
+
+/* Menu */
+
+.default-menu .ant-menu {
+  background-color: #f8fafd;
+}
+
+.default-menu
+  :is(
+    .ant-menu-light.ant-menu-root.ant-menu-inline,
+    .ant-menu-light > .ant-menu.ant-menu-root.ant-menu-inline,
+    .ant-menu-light.ant-menu-root.ant-menu-vertical,
+    .ant-menu-light > .ant-menu.ant-menu-root.ant-menu-vertical
+  ) {
+  border-inline-end: none;
+}
+
+.default-menu .ant-menu-item,
+.default-menu .ant-menu-submenu .ant-menu-submenu-title {
+  padding: 8px 23px;
+  line-height: 1.5;
+}
+.default-menu .ant-menu-item.ant-menu-item-selected {
+  background-color: var(--color-second);
+  /* color: var(--color-text); */
+}

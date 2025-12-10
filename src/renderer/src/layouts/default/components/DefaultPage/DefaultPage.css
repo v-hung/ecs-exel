@@ -1,0 +1,15 @@
+.default-page {
+  position: relative;
+  height: 100vh;
+  background-color: #fff;
+  contain: paint;
+  overflow-y: scroll;
+}
+
+.default-page__container {
+  /* position: relative; */
+  display: flex;
+  flex-direction: column;
+  background-color: transparent;
+  /* height: auto; */
+}
