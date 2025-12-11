@@ -1,10 +1,12 @@
 import { ipcMain } from 'electron'
-import { generateAttendanceData } from '../utils/attendanceGenerator'
-import { createWorkbook, saveWorkbook } from '../utils/excelUtils'
-import { showSaveDialog } from '../utils/dialogUtils'
 import { attendanceService } from '../services/attendance.service'
-import { AttendanceRecord, GetAttendanceParams } from '../types/attendance.type'
+import {
+  AttendanceRecord,
+  ExportAttendanceParams,
+  GetAttendanceParams
+} from '../types/attendance.type'
 import { ApiResponse } from '../types/response.type'
+import { excelExportService } from '../services/excel-export.service'
 
 /**
  * Đăng ký IPC handler cho xuất file chấm công
@@ -31,28 +33,31 @@ export function registerAttendanceHandlers(): void {
   )
 
   // Export attendance
-  ipcMain.handle('export-attendance', async (event, data: any): Promise<any> => {
-    try {
-      const { employees, startDate, endDate } = data
+  ipcMain.handle(
+    'attendance:export',
+    async (_event, params: ExportAttendanceParams): Promise<any> => {
+      try {
+        const { users, startDate, endDate } = params
 
-      // Tạo dữ liệu chấm công
-      const attendanceData = generateAttendanceData(employees, startDate, endDate)
+        // Lấy data attendance
+        const attendanceData = await attendanceService.getAttendanceData({
+          userIds: users.map((u) => u.id),
+          startDate: new Date(startDate),
+          endDate: new Date(endDate)
+        })
 
-      // Tạo workbook
-      const wb = createWorkbook(attendanceData)
+        // Export to Excel
+        const result = await excelExportService.exportAttendance(
+          attendanceData,
+          new Date(startDate),
+          new Date(endDate)
+        )
 
-      // Hiển thị dialog lưu file
-      const filePath = await showSaveDialog(startDate, endDate)
-
-      if (filePath) {
-        saveWorkbook(wb, filePath)
-        return { success: true }
-      } else {
-        return { success: false, error: 'Người dùng đã hủy' }
+        return result
+      } catch (error) {
+        console.error('Export error:', error)
+        return { success: false, error: (error as Error).message }
       }
-    } catch (error) {
-      console.error('Export error:', error)
-      return { success: false, error: (error as Error).message }
     }
-  })
+  )
 }

@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react'
-import { AttendanceRecord, GetAttendanceParams } from 'src/main/types/attendance.type'
+import {
+  AttendanceRecord,
+  ExportAttendanceParams,
+  GetAttendanceParams
+} from 'src/main/types/attendance.type'
 import { ApiResponse } from 'src/main/types/response.type'
 
 /**
@@ -42,4 +46,50 @@ export const useAttendanceData = (params: GetAttendanceParams | null) => {
   }, [params])
 
   return { loading, error, data }
+}
+
+/**
+ *  Hook để xuất file chấm công
+ */
+export const useAttendanceExport = () => {
+  const [exporting, setExporting] = useState(false)
+  const [exportError, setExportError] = useState<string | null>(null)
+
+  const exportAttendance = async (
+    params: ExportAttendanceParams,
+    callbacks?: {
+      onSuccess?: (filePath: string) => void
+      onError?: (error: string) => void
+    }
+  ) => {
+    try {
+      setExporting(true)
+      setExportError(null)
+
+      const result = await window.electron.ipcRenderer.invoke('attendance:export', params)
+
+      if (result.success) {
+        // Gọi callback success nếu có
+        callbacks?.onSuccess?.(result.filePath)
+      } else {
+        const errorMsg = result.error || 'Lỗi không xác định khi xuất file'
+        setExportError(errorMsg)
+        // Gọi callback error nếu có
+        callbacks?.onError?.(errorMsg)
+      }
+
+      return result
+    } catch (err) {
+      console.error('Export attendance error:', err)
+      const errorMsg = (err as Error).message
+      setExportError(errorMsg)
+      // Gọi callback error nếu có
+      callbacks?.onError?.(errorMsg)
+      return { success: false, error: errorMsg }
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  return { exporting, exportError, exportAttendance }
 }

@@ -4,6 +4,7 @@ import { tickets, type Ticket, TicketStatus } from '../database/schema/tickets'
 import db from '../database'
 import { getUserByIds } from './user.service'
 import { AttendanceRecord, GetAttendanceParams } from '../types/attendance.type'
+import { calculateWorkDuration } from '../utils/timesheet.utils'
 
 export const attendanceService = {
   /**
@@ -14,9 +15,24 @@ export const attendanceService = {
 
     const userList = await getUserByIds(userIds)
 
+    // Chuẩn hóa startDate về đầu ngày (00:00:00) và endDate về cuối ngày (23:59:59)
+    const normalizedStartDate = new Date(startDate)
+    normalizedStartDate.setHours(0, 0, 0, 0)
+
+    const normalizedEndDate = new Date(endDate)
+    normalizedEndDate.setHours(23, 59, 59, 999)
+
     // Lấy timesheets trong khoảng thời gian
     const timesheetList = await db
-      .select()
+      .select({
+        id: timesheets.id,
+        userId: timesheets.userId,
+        dateTime: timesheets.dateTime,
+        startHour: timesheets.startHour,
+        endHour: timesheets.endHour,
+        duration: timesheets.duration,
+        isDeleted: timesheets.isDeleted
+      })
       .from(timesheets)
       .where(
         and(
@@ -24,7 +40,7 @@ export const attendanceService = {
             timesheets.userId,
             userList.map((u) => u.id)
           ),
-          between(timesheets.dateTime, startDate, endDate),
+          between(timesheets.dateTime, normalizedStartDate, normalizedEndDate),
           eq(timesheets.isDeleted, false)
         )
       )
@@ -32,7 +48,17 @@ export const attendanceService = {
 
     // Lấy tickets đã được approve trong khoảng thời gian
     const ticketList = await db
-      .select()
+      .select({
+        id: tickets.id,
+        userId: tickets.userId,
+        status: tickets.status,
+        type: tickets.type,
+        dateTime: tickets.dateTime,
+        startHour: tickets.startHour,
+        endHour: tickets.endHour,
+        duration: tickets.duration,
+        isDeleted: tickets.isDeleted
+      })
       .from(tickets)
       .where(
         and(
@@ -40,16 +66,24 @@ export const attendanceService = {
             tickets.userId,
             userList.map((u) => u.id)
           ),
-          between(tickets.dateTime, startDate, endDate),
+          between(tickets.dateTime, normalizedStartDate, normalizedEndDate),
           eq(tickets.status, TicketStatus.ACCEPT),
-          eq(tickets.isDeleted, false)
+          eq(tickets.isDeleted, false),
+          eq(tickets.type, 0), // Chỉ lấy ticket nghỉ phép
+          eq(tickets.status, 1) // Chỉ lấy ticket đã được approve
         )
       )
       .orderBy(tickets.dateTime)
 
     // Tạo Map để tối ưu performance
-    const timesheetsByUserId = new Map<number, Timesheet[]>()
-    const ticketsByDateTime = new Map<string, Ticket[]>()
+    const timesheetsByUserId = new Map<
+      number,
+      Omit<AttendanceRecord['timesheets'][number], 'tickets'>[]
+    >()
+    const ticketsByDateTime = new Map<
+      string,
+      AttendanceRecord['timesheets'][number]['tickets'][number][]
+    >()
 
     // Group timesheets theo userId
     timesheetList.forEach((timesheet) => {
@@ -77,8 +111,22 @@ export const attendanceService = {
         const key = `${timesheet.userId}_${timesheet.dateTime}`
         const relatedTickets = ticketsByDateTime.get(key) || []
 
+        // // Tính lại duration chính xác cho từng ticket
+        // const ticketsWithCalculatedDuration = relatedTickets.map((ticket) => ({
+        //   ...ticket,
+        //   duration: calculateWorkDuration(ticket.startHour, ticket.endHour, 0, [])
+        // }))
+
+        // Tính lại duration cho timesheet - truyền tickets với startHour/endHour
+        const calculatedDuration = calculateWorkDuration(
+          timesheet.startHour,
+          timesheet.endHour,
+          user.timesheetType || 0
+        )
+
         return {
           ...timesheet,
+          duration: calculatedDuration,
           tickets: relatedTickets
         }
       })

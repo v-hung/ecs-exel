@@ -1,0 +1,254 @@
+.attendance-table-wrapper {
+  flex: 1;
+  min-height: 0;
+  overflow-x: auto;
+  margin-top: 16px;
+}
+
+.attendance-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+  background: white;
+}
+
+.attendance-table th,
+.attendance-table td {
+  border-top: 1px solid #e8e8e8;
+  border-left: 1px solid #e8e8e8;
+  padding: 8px 12px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.attendance-table th:last-child,
+.attendance-table td:last-child {
+  border-right: 1px solid #e8e8e8;
+}
+
+.attendance-table tbody tr:last-child td {
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.attendance-table thead th {
+  background: #fafafa;
+  font-weight: 600;
+  position: sticky;
+  z-index: 11;
+}
+
+/* First row sticky at top: 0 */
+.attendance-table thead tr:first-child th {
+  top: 0;
+}
+
+/* Second row sticky below first row */
+.attendance-table thead tr:nth-child(2) th {
+  top: 41px; /* Adjust based on first row height */
+}
+
+/* Column widths */
+.col-no {
+  width: 50px;
+  min-width: 50px;
+}
+
+.col-name {
+  width: 150px;
+  min-width: 150px;
+  text-align: left;
+}
+
+.col-type-project {
+  width: 270px;
+  min-width: 270px;
+}
+
+.col-type {
+  width: 150px;
+  min-width: 150px;
+}
+
+.col-project {
+  width: 120px;
+  min-width: 120px;
+}
+
+.col-date-group {
+  font-size: 14px;
+  font-weight: 600;
+  background: #e6f7ff !important;
+  border-bottom: 2px solid #1890ff;
+  position: sticky;
+  top: 0;
+  z-index: 12;
+}
+
+.col-date {
+  width: 80px;
+  min-width: 80px;
+  padding: 4px !important;
+  vertical-align: middle;
+}
+
+.col-date.weekend {
+  background: #f5f5f5;
+}
+
+.col-no,
+.col-name,
+.col-type-project,
+.col-type,
+.col-project {
+  text-align: left !important;
+  vertical-align: top !important;
+}
+
+.date-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.date-day {
+  font-size: 11px;
+  color: #8c8c8c;
+  text-transform: uppercase;
+}
+
+.date-number {
+  font-size: 12px;
+  font-weight: 600;
+  color: #262626;
+}
+
+.col-date.weekend .date-day,
+.col-date.weekend .date-number {
+  color: #ff4d4f;
+}
+
+.col-total {
+  width: 80px;
+  min-width: 80px;
+  background: #f0f5ff;
+  color: #1890ff;
+}
+
+/* User info */
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.user-name {
+  font-weight: 600;
+  color: #262626;
+}
+
+.user-username {
+  font-size: 12px;
+  color: #8c8c8c;
+}
+
+/* Time cell */
+.time-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.ticket-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  background: #52c41a;
+  color: white;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+/* Row styles */
+.time-row {
+  background: white;
+}
+
+.total-time-row td {
+  background-color: #d9eece !important;
+}
+
+.project-row {
+  background: #fafafa;
+}
+
+.project-total-row td {
+  background-color: #e6f7ff !important;
+}
+
+.time-row:hover,
+.project-row:hover {
+  background: #f5f5f5;
+}
+
+/* Loading */
+.loading {
+  padding: 40px;
+  text-align: center;
+  color: #8c8c8c;
+}
+
+/* Fixed columns */
+.attendance-table th.col-no,
+.attendance-table th.col-name,
+.attendance-table td.col-no,
+.attendance-table td.col-name {
+  position: sticky;
+  background: white;
+  z-index: 5;
+}
+
+.attendance-table thead th.col-no,
+.attendance-table thead th.col-name {
+  background: #fafafa;
+  z-index: 16;
+}
+
+.attendance-table th.col-no,
+.attendance-table td.col-no {
+  left: 0;
+  border-left: 1px solid #e8e8e8;
+}
+
+.attendance-table th.col-name,
+.attendance-table td.col-name {
+  left: 50px;
+}
+
+.attendance-table th.col-total,
+.attendance-table td.col-total {
+  position: sticky;
+  right: 0;
+  z-index: 5;
+  background: #f0f5ff;
+  border-right: 1px solid #e8e8e8;
+}
+
+.attendance-table thead th.col-total {
+  z-index: 16;
+  background: #f0f5ff;
+}
+.attendance-table th.col-total,
+.attendance-table td.col-total {
+  position: sticky;
+  right: 0;
+  z-index: 5;
+}
+
+.attendance-table thead th.col-total {
+  z-index: 15;
+}

@@ -1,12 +1,12 @@
-import { Flex, Form, Transfer, Spin } from 'antd'
+import { Form, Transfer, Spin } from 'antd'
 import type { TransferProps } from 'antd'
-import { Key, useMemo } from 'react'
+import { useMemo } from 'react'
 import './style.css'
-import { UserDto } from '../../hooks/users'
+import { UserDto } from 'src/main/types/user.type'
 
 interface EmployeeTransferProps {
   dataSource: UserDto[]
-  targetKeys: Key[]
+  targetKeys: number[]
   onChange: TransferProps['onChange']
   loading?: boolean
 }
@@ -29,7 +29,7 @@ export const EmployeeTransfer: React.FC<EmployeeTransferProps> = ({
   return (
     <Form.Item
       label="Chọn nhân viên"
-      style={{ flex: '1', display: 'flex', flexDirection: 'column', height: 0 }}
+      style={{ flex: '1', display: 'flex', flexDirection: 'column', height: 0, marginBottom: 0 }}
       className="form-item-full-height"
     >
       <Spin spinning={loading} tip="Đang tải danh sách nhân viên...">

@@ -1,0 +1,146 @@
+.project-assignment {
+  padding: 24px;
+  background: #f8fafd;
+  min-height: 100vh;
+}
+
+.project-assignment .ant-card {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+}
+
+.project-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.unassigned-column {
+  border: 2px solid #d9d9d9;
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.projects-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.project-column {
+  border: 2px solid #d9d9d9;
+  border-radius: 8px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+}
+
+.add-project-column {
+  border-style: dashed;
+  background: #fafafa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80px;
+}
+
+.column-header {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fafafa;
+  border-radius: 6px 6px 0 0;
+}
+
+.column-header .ant-typography {
+  margin: 0;
+  font-size: 14px;
+}
+
+.employee-list {
+  padding: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  transition: background-color 0.2s;
+  display: flex;
+  gap: 8px;
+  min-height: 60px;
+}
+
+.employee-list.dragging-over {
+  background: #e6f7ff;
+  border: 2px dashed #1890ff;
+  border-radius: 4px;
+}
+
+.employee-card {
+  padding: 8px 12px;
+  background: #fff;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  cursor: grab;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 100px;
+  flex-shrink: 0;
+  align-items: center;
+  text-align: center;
+}
+
+.employee-card:hover {
+  border-color: #1890ff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.employee-card.dragging {
+  cursor: grabbing;
+  opacity: 0.5;
+  transform: rotate(2deg);
+}
+
+.employee-card .ant-typography {
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100px;
+}
+
+.unassigned-column .employee-card {
+  background: #fff7e6;
+  border-color: #ffa940;
+}
+
+.project-column .employee-card {
+  background: #f6ffed;
+  border-color: #52c41a;
+}
+
+/* Scrollbar styling */
+.employee-list::-webkit-scrollbar {
+  height: 6px;
+}
+
+.employee-list::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 3px;
+}
+
+.employee-list::-webkit-scrollbar-thumb {
+  background: #bfbfbf;
+  border-radius: 3px;
+}
+
+.employee-list::-webkit-scrollbar-thumb:hover {
+  background: #8c8c8c;
+}
+
+.empty-placeholder {
+  text-align: center;
+  color: #999;
+  padding: 20px;
+}

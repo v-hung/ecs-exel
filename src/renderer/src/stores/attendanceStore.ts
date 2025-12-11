@@ -1,10 +1,9 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import type { Key } from 'react'
 
 interface AttendanceStore {
-  selectedEmployeeIds: Key[]
-  setSelectedEmployeeIds: (ids: Key[]) => void
+  selectedEmployeeIds: number[]
+  setSelectedEmployeeIds: (ids: number[]) => void
   clearSelectedEmployeeIds: () => void
 }
 

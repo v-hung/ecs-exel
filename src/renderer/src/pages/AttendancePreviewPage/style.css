@@ -1,0 +1,87 @@
+.attendance-preview {
+  padding: 24px;
+  background: #f8fafd;
+  min-height: 100vh;
+  height: 500px;
+}
+
+.report-info {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #f0f5ff;
+  border-radius: 4px;
+}
+
+.attendance-table .date-header {
+  text-align: center;
+  font-weight: 600;
+}
+
+.attendance-table .weekday {
+  font-size: 11px;
+  color: #8c8c8c;
+  font-weight: normal;
+}
+
+.attendance-table .weekend-column {
+  background: #fafafa;
+}
+
+.attendance-table .cell-empty {
+  color: #bfbfbf;
+  font-size: 12px;
+}
+
+.attendance-table .cell-content {
+  font-size: 12px;
+  padding: 2px;
+}
+
+.attendance-table .cell-content.break-time {
+  color: #ff4d4f;
+}
+
+.attendance-table .cell-content.total {
+  font-weight: 600;
+  color: #1890ff;
+}
+
+.attendance-table .cell-content.has-ticket {
+  position: relative;
+  background: #fff7e6;
+}
+
+.attendance-table .ticket-indicator {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: #fa8c16;
+  color: white;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+}
+
+/* Row grouping styles */
+.attendance-table .row-group-even {
+  background: #ffffff;
+}
+
+.attendance-table .row-group-odd {
+  background: #fafafa;
+}
+
+/* Merge cells visually for user groups */
+.attendance-table .ant-table-cell {
+  border-bottom: 1px solid #f0f0f0 !important;
+}
+
+/* Add thicker border after last project row of each user */
+.attendance-table tr.user-group-end .ant-table-cell {
+  border-bottom: 2px solid #d9d9d9 !important;
+}

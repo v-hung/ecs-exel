@@ -12,12 +12,23 @@ const router = createBrowserRouter(
           lazy: () => import('./layouts/default/DefaultLayout'),
           children: [
             {
-              path: '/',
-              lazy: () => import('@renderer/pages/attendance/AttendancePage')
+              index: true,
+              lazy: async () => {
+                const { Navigate } = await import('react-router')
+                return { Component: () => <Navigate to="/attendance" replace /> }
+              }
+            },
+            {
+              path: '/attendance',
+              lazy: () => import('@renderer/pages/AttendancePage')
+            },
+            {
+              path: '/attendance/projects',
+              lazy: () => import('@renderer/pages/ProjectAssignment')
             },
             {
               path: '/attendance/preview',
-              lazy: () => import('@renderer/pages/attendance/AttendancePreviewPage')
+              lazy: () => import('@renderer/pages/AttendancePreviewPage')
             }
           ]
         },
