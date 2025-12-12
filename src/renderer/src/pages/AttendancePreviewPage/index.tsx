@@ -1,4 +1,4 @@
-import { Card, Button, Space, message, Typography, Spin } from 'antd'
+import { Card, Button, Space, Typography, Spin, App } from 'antd'
 import { DownloadOutlined, ArrowLeftOutlined } from '@ant-design/icons'
 import { eachDayOfInterval, isWeekend, parseISO } from 'date-fns'
 import { useNavigate } from 'react-router'
@@ -18,6 +18,7 @@ import { ExportAttendanceParams } from 'src/main/types/attendance.type'
 const { Text } = Typography
 
 export function Component() {
+  const { message } = App.useApp()
   const navigate = useNavigate()
   const { startDate, endDate } = useAttendanceSession()
   const { selectedEmployeeIds } = useAttendanceStore()
@@ -39,15 +40,22 @@ export function Component() {
     const params: ExportAttendanceParams = {
       startDate: startDate ? new Date(startDate) : new Date(),
       endDate: endDate ? new Date(endDate) : new Date(),
-      users: selectedEmployeeIds.map((id) => {
-        const project = projects.find((p) => p.id === id)
+      users: selectedEmployeeIds.map((userId) => {
+        // Tìm project mà user này thuộc về
+        const userProject = projects.find((p) => p.employeeIds.includes(userId))
+
         return {
-          id,
-          projectId: project ? project.id : 0,
-          projectName: project ? project.name : ''
+          id: userId,
+          projectId: userProject?.id || 0,
+          projectName: userProject?.name || ''
         }
-      })
+      }),
+      projects: projects.map((p) => ({
+        id: p.id,
+        name: p.name
+      }))
     }
+
     await exportAttendance(params, {
       onSuccess: () => {
         message.success('Xuất file Excel thành công!')

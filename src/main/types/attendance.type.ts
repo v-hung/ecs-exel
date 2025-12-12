@@ -23,6 +23,15 @@ export type AttendanceRecord = {
   }[]
 }
 
+export type Project = {
+  id: number
+  name: string
+}
+
+export type AttendanceRecordForExport = AttendanceRecord & {
+  project: Project
+}
+
 export interface GetAttendanceParams {
   userIds: number[]
   startDate: Date
@@ -37,4 +46,5 @@ export interface ExportAttendanceParams {
     projectId: number
     projectName: string
   }[]
+  projects: Project[]
 }

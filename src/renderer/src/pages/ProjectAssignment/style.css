@@ -100,6 +100,10 @@
   cursor: grabbing;
   opacity: 0.5;
   transform: rotate(2deg);
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  min-width: 100px !important;
 }
 
 .employee-card .ant-typography {
