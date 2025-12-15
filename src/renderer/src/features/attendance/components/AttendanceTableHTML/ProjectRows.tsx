@@ -95,6 +95,7 @@ export function ProjectRows({ record, projects, dateRange }: ProjectRowsProps) {
                 <td
                   key={date.toISOString()}
                   className={`col-date ${isWeekendDay ? 'weekend' : ''}`}
+                  style={{ color: isAssigned ? '#ff4d4f' : 'inherit' }}
                 >
                   {renderProjectValue(project.id, date)}
                 </td>

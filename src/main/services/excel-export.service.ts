@@ -156,7 +156,7 @@ export class ExcelExportService {
       this.fillUserInfo(worksheet, currentRow, recordIndex, record)
 
       // Điền label cho 4 time rows
-      this.fillTimeLabels(worksheet, currentRow)
+      this.fillTimeLabels(worksheet, currentRow, projects.length)
 
       // Điền label cho project rows
       this.fillProjectLabels(worksheet, currentRow, projects, record)
@@ -236,12 +236,17 @@ export class ExcelExportService {
   /**
    * Điền label cho 4 time rows
    */
-  private fillTimeLabels(worksheet: ExcelJS.Worksheet, currentRow: number): void {
+  private fillTimeLabels(
+    worksheet: ExcelJS.Worksheet,
+    currentRow: number,
+    projectCount: number
+  ): void {
     worksheet.getCell(currentRow, 3).value = 'start time'
     worksheet.getCell(currentRow + 1, 3).value = 'closing time'
     worksheet.getCell(currentRow + 2, 3).value = 'break time'
     worksheet.getCell(currentRow + 3, 3).value = 'day total'
-    worksheet.getCell(currentRow + 4, 3).value = 'W.T.total'
+    worksheet.getCell(currentRow + 4, 3).value = 'Working Time'
+    worksheet.getCell(currentRow + 4 + projectCount, 3).value = 'W.T.total'
   }
 
   /**
@@ -254,15 +259,16 @@ export class ExcelExportService {
     record: AttendanceRecordForExport
   ): void {
     projects.forEach((project, projectIndex) => {
-      const projectCell = worksheet.getCell(currentRow + 5 + projectIndex, 4)
+      const projectCell = worksheet.getCell(currentRow + 4 + projectIndex, 4)
       projectCell.value = `Prj.#${project.id}`
 
       // Nếu là project của user, đổi màu chữ đỏ
-      if (record.project.id === project.id) {
-        projectCell.font = {
-          ...projectCell.font,
-          color: { argb: COLORS.red }
-        }
+      const currentFont = projectCell.font || {}
+      const isUserProject = record.project.id === project.id
+
+      projectCell.font = {
+        ...currentFont,
+        color: { argb: isUserProject ? COLORS.red : COLORS.black }
       }
     })
   }
@@ -283,25 +289,18 @@ export class ExcelExportService {
       const currentColIndex = templateColIndex + dateIndex
 
       // Tìm timesheet cho ngày này
-      const timesheet = record.timesheets.find((ts) => {
-        const tsDate = new Date(ts.dateTime)
-        return (
-          tsDate.getFullYear() === date.getFullYear() &&
-          tsDate.getMonth() === date.getMonth() &&
-          tsDate.getDate() === date.getDate()
-        )
-      })
+      const timesheet = record.timesheets[dateIndex]
 
       if (timesheet) {
         this.fillTimeData(worksheet, currentRow, currentColIndex, timesheet)
         this.fillProjectData(worksheet, currentRow, currentColIndex, projects, record)
-      } else {
-        // Không có data thì để trống (chỉ set day total formula)
-        const colLetter = this.getColumnLetter(currentColIndex)
-        const totalCell = worksheet.getCell(currentRow + 3, currentColIndex)
-        totalCell.value = {
-          formula: `=${colLetter}${currentRow + 1}-${colLetter}${currentRow}-${colLetter}${currentRow + 2}`
-        }
+      }
+
+      // day total - để công thức Excel tự tính (=E7-E6-E8)
+      const colLetter = this.getColumnLetter(currentColIndex)
+      const totalCell = worksheet.getCell(currentRow + 3, currentColIndex)
+      totalCell.value = {
+        formula: `=${colLetter}${currentRow + 1}-${colLetter}${currentRow}-${colLetter}${currentRow + 2}`
       }
     })
   }
@@ -317,24 +316,28 @@ export class ExcelExportService {
   ): void {
     // Row 1: start time
     const startCell = worksheet.getCell(currentRow, colIndex)
-    startCell.value = timesheet.startHour
+    if (timesheet.startHour) {
+      startCell.value = this.convertTimeStringToExcelValue(timesheet.startHour)
+    }
 
     // Row 2: closing time
     const endCell = worksheet.getCell(currentRow + 1, colIndex)
-    endCell.value = timesheet.endHour
+    if (timesheet.endHour) {
+      endCell.value = this.convertTimeStringToExcelValue(timesheet.endHour)
+    }
 
     // Row 3: break time - dựa theo timesheetType
     // timesheetType = 30 -> 1:00:00, timesheetType = 0 -> 1:30:00
     const breakTime = timesheet.timesheetType === 30 ? '1:00:00' : '1:30:00'
     const breakCell = worksheet.getCell(currentRow + 2, colIndex)
-    breakCell.value = breakTime
+    breakCell.value = this.convertTimeStringToExcelValue(breakTime)
 
-    // Row 4: day total - để công thức Excel tự tính (=E7-E6-E8)
-    const colLetter = this.getColumnLetter(colIndex)
-    const totalCell = worksheet.getCell(currentRow + 3, colIndex)
-    totalCell.value = {
-      formula: `=${colLetter}${currentRow + 1}-${colLetter}${currentRow}-${colLetter}${currentRow + 2}`
-    }
+    // // Row 4: day total - để công thức Excel tự tính (=E7-E6-E8)
+    // const colLetter = this.getColumnLetter(colIndex)
+    // const totalCell = worksheet.getCell(currentRow + 3, colIndex)
+    // totalCell.value = {
+    //   formula: `=${colLetter}${currentRow + 1}-${colLetter}${currentRow}-${colLetter}${currentRow + 2}`
+    // }
   }
 
   /**
@@ -352,6 +355,22 @@ export class ExcelExportService {
   }
 
   /**
+   * Chuyển string time (HH:mm:ss) sang Excel time value (số thập phân)
+   * Ví dụ: '1:00:00' -> 0.041666... (1/24)
+   */
+  private convertTimeStringToExcelValue(timeString: string): number {
+    if (!timeString) return 0
+
+    const parts = timeString.split(':')
+    const hours = parseInt(parts[0] || '0', 10)
+    const minutes = parseInt(parts[1] || '0', 10)
+    const seconds = parseInt(parts[2] || '0', 10)
+
+    // Excel time: 1 = 24 giờ, 1/24 = 1 giờ, 1/1440 = 1 phút, 1/86400 = 1 giây
+    return hours / 24 + minutes / 1440 + seconds / 86400
+  }
+
+  /**
    * Điền dữ liệu project (N rows)
    */
   private fillProjectData(
@@ -364,7 +383,7 @@ export class ExcelExportService {
     const colLetter = this.getColumnLetter(colIndex)
 
     projects.forEach((project, projectIndex) => {
-      const projectCell = worksheet.getCell(currentRow + 5 + projectIndex, colIndex)
+      const projectCell = worksheet.getCell(currentRow + 4 + projectIndex, colIndex)
 
       if (record.project.id === project.id) {
         // Project của user -> bằng day total (reference đến cell day total)
@@ -373,7 +392,7 @@ export class ExcelExportService {
         }
       } else {
         // Không phải project của user -> 0:00:00
-        projectCell.value = '0:00:00'
+        projectCell.value = this.convertTimeStringToExcelValue('0:00:00')
       }
     })
   }
@@ -388,9 +407,9 @@ export class ExcelExportService {
     projects: Project[]
   ): void {
     const templateColIndex = 5 // Cột E
-    const totalRowIndex = currentRow + 4 // W.T.total nằm ở row 5 (sau day total)
-    const firstProjectRow = currentRow + 5
-    const lastProjectRow = currentRow + 5 + projects.length - 1
+    const firstProjectRow = currentRow + 4
+    const lastProjectRow = currentRow + 4 + projects.length - 1
+    const totalRowIndex = currentRow + 4 + projects.length // W.T.total ở cuối cùng sau các project
 
     // Điền công thức cho từng ngày trong W.T.total row
     dates.forEach((_, dateIndex) => {
@@ -445,5 +464,6 @@ const COLORS = {
   green: 'FFC6E0B4',
   red: 'FFFF0000',
   cyan: 'FFCCFFFF',
-  yellow: 'FFFFFFCC'
+  yellow: 'FFFFFFCC',
+  black: 'FF000000'
 }
