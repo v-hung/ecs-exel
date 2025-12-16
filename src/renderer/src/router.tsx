@@ -1,8 +1,8 @@
-import { createBrowserRouter } from 'react-router'
+import { createHashRouter } from 'react-router'
 import ErrorBoundary from './pages/error/ErrorBoundary'
 import { RootLayout } from './layouts/RootLayout'
 
-const router = createBrowserRouter(
+const router = createHashRouter(
   [
     {
       errorElement: <ErrorBoundary />,

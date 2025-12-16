@@ -1,10 +1,10 @@
 {
-  "name": "electron-app",
+  "name": "sdc-work-report",
   "version": "1.0.0",
-  "description": "An Electron application with React and TypeScript",
+  "description": "SDC Work Report - Smart, Dynamic, Collaborative attendance and work summary tool.",
   "main": "./out/main/index.js",
-  "author": "example.com",
-  "homepage": "https://electron-vite.org",
+  "author": "Việt Hùng",
+  "homepage": "https://github.com/v-hung",
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint --cache .",

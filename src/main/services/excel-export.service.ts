@@ -691,6 +691,12 @@ export class ExcelExportService {
     totalCell.value = {
       formula: `=SUM(L${firstProjectRow}:L${lastProjectRow})`
     }
+    totalCell.border = {
+      top: { style: 'thin' },
+      left: { style: 'thin' },
+      bottom: { style: 'thin' },
+      right: { style: 'thin' }
+    }
 
     // Occupancy rate
     const occupancyRow = summaryStartRow + 3 + projects.length

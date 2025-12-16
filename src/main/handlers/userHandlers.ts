@@ -22,17 +22,4 @@ export function registerUserHandlers() {
       }
     }
   })
-
-  /**
-   * Get user by ID
-   */
-  ipcMain.handle('user:getById', async (_, id: number) => {
-    try {
-      // TODO: Implement getUserById in service
-      return { success: true, data: null }
-    } catch (error) {
-      console.error('Error getting user by id:', error)
-      throw error
-    }
-  })
 }

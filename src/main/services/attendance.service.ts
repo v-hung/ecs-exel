@@ -1,6 +1,6 @@
 import { and, between, eq, inArray } from 'drizzle-orm'
-import { timesheets, type Timesheet } from '../database/schema/timesheets'
-import { tickets, type Ticket, TicketStatus } from '../database/schema/tickets'
+import { timesheets } from '../database/schema/timesheets'
+import { tickets, TicketStatus } from '../database/schema/tickets'
 import db from '../database'
 import { getUserByIds } from './user.service'
 import { AttendanceRecord, GetAttendanceParams } from '../types/attendance.type'
@@ -138,40 +138,5 @@ export const attendanceService = {
     })
 
     return result
-  },
-
-  /**
-   * Lấy timesheets của một user trong khoảng thời gian
-   */
-  async getTimesheetsByUser(userId: number, startDate: Date, endDate: Date): Promise<Timesheet[]> {
-    return await db
-      .select()
-      .from(timesheets)
-      .where(
-        and(
-          eq(timesheets.userId, userId),
-          between(timesheets.dateTime, startDate, endDate),
-          eq(timesheets.isDeleted, false)
-        )
-      )
-      .orderBy(timesheets.dateTime)
-  },
-
-  /**
-   * Lấy tickets của một user trong khoảng thời gian
-   */
-  async getTicketsByUser(userId: number, startDate: Date, endDate: Date): Promise<Ticket[]> {
-    return await db
-      .select()
-      .from(tickets)
-      .where(
-        and(
-          eq(tickets.userId, userId),
-          between(tickets.dateTime, startDate, endDate),
-          eq(tickets.status, TicketStatus.ACCEPT),
-          eq(tickets.isDeleted, false)
-        )
-      )
-      .orderBy(tickets.dateTime)
   }
 }

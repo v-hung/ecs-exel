@@ -6,7 +6,7 @@ export default defineConfig({
   schema: './src/main/database/schema',
   dialect: 'mysql',
   dbCredentials: {
-    url: process.env.DATABASE_URL!
+    url: process.env.MAIN_VITE_DATABASE_URL!
   },
   strict: false
 })
