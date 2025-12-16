@@ -17,7 +17,7 @@ export function ProjectRows({ record, projects, dateRange }: ProjectRowsProps) {
       return format(tsDate, 'yyyy-MM-dd') === dateKey
     })
 
-    if (!timesheet) return '0:00'
+    if (!timesheet) return ''
 
     // Nếu không phải dự án của user
     if (record.userProjectId !== projectId) return '0:00'

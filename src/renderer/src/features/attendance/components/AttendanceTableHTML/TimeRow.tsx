@@ -12,8 +12,6 @@ interface TimeRowProps {
   projectName?: string
 }
 
-const DEFAULT_BREAK_MINUTES = 90 // 1h30 mặc định
-
 export function TimeRow({
   record,
   label,
@@ -45,8 +43,26 @@ export function TimeRow({
       const endHour = timesheet.endHour || '-'
       value = endHour !== '-' ? endHour.substring(0, 5) : '-'
     } else if (timeIndex === 2) {
-      // Nghỉ - Mặc định 1h30 (90 phút) trừ đi timesheetType
-      const breakMinutes = DEFAULT_BREAK_MINUTES - (record.timesheetType || 0)
+      // Nghỉ - Tính dựa theo timesheetType và khoảng làm việc
+      let breakMinutes = 0
+
+      if (timesheet.startHour && timesheet.endHour) {
+        const [startH, startM] = timesheet.startHour.split(':').map(Number)
+        const [endH, endM] = timesheet.endHour.split(':').map(Number)
+
+        const startMinutes = startH * 60 + startM
+        const endMinutes = endH * 60 + endM
+
+        const lunchStart = 12 * 60 // 12:00
+        const lunchEnd = record.timesheetType === 30 ? 13 * 60 : 13 * 60 + 30
+
+        // Chỉ tính nghỉ trưa nếu làm QUA giờ trưa
+        const isWorkingThroughLunch = startMinutes < lunchEnd && endMinutes > lunchStart
+
+        if (isWorkingThroughLunch) {
+          breakMinutes = record.timesheetType === 30 ? 60 : 90
+        }
+      }
 
       if (breakMinutes > 0) {
         value = `${Math.floor(breakMinutes / 60)}:${String(breakMinutes % 60).padStart(2, '0')}`

@@ -1,10 +1,11 @@
-import ExcelJS, { Anchor } from 'exceljs'
+import ExcelJS from '@zurmokeeper/exceljs'
 import * as fs from 'fs'
-import { dialog } from 'electron'
+import { app, dialog } from 'electron'
 import { AttendanceRecordForExport, Project } from '../types/attendance.type'
 import { getFilePath } from '../utils/file.utils'
 import { ATTENDANCE_CONST } from '../constants/attendance.const'
 import { format, isWeekend } from 'date-fns'
+import { basename, extname, join } from 'path'
 
 export class ExcelExportService {
   /**
@@ -21,35 +22,29 @@ export class ExcelExportService {
       const currentDate = new Date()
       const defaultFileName = format(currentDate, ATTENDANCE_CONST.EXPORT_FILE_NAME)
 
+      const defaultDir = app.getPath('downloads')
+      const dir = defaultDir
+      const ext = extname(defaultFileName)
+      const baseName = basename(defaultFileName, ext)
+
+      let finalFileName = defaultFileName
+      let counter = 1
+      let checkPath = join(dir, finalFileName)
+
+      while (fs.existsSync(checkPath)) {
+        finalFileName = `${baseName} (${counter})${ext}`
+        checkPath = join(dir, finalFileName)
+        counter++
+      }
+
       const result = await dialog.showSaveDialog({
         title: 'Lưu file Excel',
-        defaultPath: defaultFileName,
+        defaultPath: join(dir, finalFileName), // Tên file đã tránh trùng
         filters: [{ name: 'Excel Files', extensions: ['xlsx'] }]
       })
 
       if (result.canceled || !result.filePath) {
         return { success: false, error: 'Đã hủy lưu file' }
-      }
-
-      // 2. Kiểm tra và xử lý file đích nếu đang mở
-      let targetFilePath = result.filePath
-      if (fs.existsSync(targetFilePath)) {
-        try {
-          // Thử xóa file cũ để kiểm tra xem có đang mở không
-          fs.unlinkSync(targetFilePath)
-        } catch (error) {
-          // File đang mở, tự động đổi tên
-          const pathParts = targetFilePath.split('.')
-          const ext = pathParts.pop()
-          const basePath = pathParts.join('.')
-          let counter = 1
-
-          // Tìm tên file khả dụng
-          while (fs.existsSync(`${basePath}_${counter}.${ext}`)) {
-            counter++
-          }
-          targetFilePath = `${basePath}_${counter}.${ext}`
-        }
       }
 
       // 3. Copy template file đến vị trí đích
@@ -59,7 +54,7 @@ export class ExcelExportService {
       }
 
       try {
-        fs.copyFileSync(templatePath, targetFilePath)
+        fs.copyFileSync(templatePath, result.filePath)
       } catch (error) {
         throw new Error(
           'Không thể tạo file. Vui lòng đóng file Excel nếu đang mở: ' + (error as Error).message
@@ -74,8 +69,8 @@ export class ExcelExportService {
         fullCalcOnLoad: true
       }
 
-      // Đọc file với options để bỏ qua hoặc xử lý shape an toàn
-      await workbook.xlsx.readFile(targetFilePath)
+      // Đọc file
+      await workbook.xlsx.readFile(result.filePath)
 
       // Lấy worksheet đầu tiên
       const worksheet = workbook.worksheets[0]
@@ -102,9 +97,9 @@ export class ExcelExportService {
       this.configurePageBreaks(worksheet, attendanceData, dateRange, projects)
 
       // 10. Ghi lại file
-      await workbook.xlsx.writeFile(targetFilePath)
+      await workbook.xlsx.writeFile(result.filePath)
 
-      return { success: true, filePath: targetFilePath }
+      return { success: true, filePath: result.filePath }
     } catch (error) {
       console.error('Export Excel error:', error)
       return { success: false, error: (error as Error).message }
@@ -387,10 +382,18 @@ export class ExcelExportService {
       const currentColIndex = templateColIndex + dateIndex
 
       // Tìm timesheet cho ngày này
-      const timesheet = record.timesheets[dateIndex]
+      const timesheet = record.timesheets.find(
+        (ts) => ts.dateTime.getDate() === dates[dateIndex].getDate()
+      )
 
       if (timesheet) {
-        this.fillTimeData(worksheet, currentRow, currentColIndex, timesheet)
+        this.fillTimeData(
+          worksheet,
+          currentRow,
+          currentColIndex,
+          timesheet,
+          record.user.timesheetType || 0
+        )
         this.fillProjectData(worksheet, currentRow, currentColIndex, projects, record)
       }
 
@@ -405,7 +408,8 @@ export class ExcelExportService {
     worksheet: ExcelJS.Worksheet,
     currentRow: number,
     colIndex: number,
-    timesheet: any
+    timesheet: AttendanceRecordForExport['timesheets'][number],
+    timesheetType: number
   ): void {
     // Row 1: start time
     const startCell = worksheet.getCell(currentRow, colIndex)
@@ -420,8 +424,27 @@ export class ExcelExportService {
     }
 
     // Row 3: break time - dựa theo timesheetType
-    // timesheetType = 30 -> 1:00:00, timesheetType = 0 -> 1:30:00
-    const breakTime = timesheet.timesheetType === 30 ? '1:00:00' : '1:30:00'
+    // timesheetType = 30 -> 1:00:00 (nghỉ trưa đến 13:00), timesheetType = 0 -> 1:30:00 (nghỉ trưa đến 13:30)
+    let breakTime = '0:00:00' // Mặc định không có nghỉ trưa
+
+    // Lunch break: start and end
+    const lunchStartMinutes = 12 * 60 // 12:00
+    const lunchEndMinutes = timesheetType === 30 ? 13 * 60 : 13 * 60 + 30 // 13:00 hoặc 13:30
+
+    if (timesheet.startHour && timesheet.endHour) {
+      const [startH, startM] = timesheet.startHour.split(':').map(Number)
+      const startMinutes = startH * 60 + startM
+
+      const [endH, endM] = timesheet.endHour.split(':').map(Number)
+      const endMinutes = endH * 60 + endM
+
+      // Chỉ tính nghỉ trưa nếu khoảng làm việc CHỨA khoảng nghỉ trưa
+      // Tức là: bắt đầu TRƯỚC nghỉ trưa VÀ kết thúc SAU nghỉ trưa
+      if (startMinutes < lunchEndMinutes && endMinutes > lunchStartMinutes) {
+        breakTime = timesheetType === 30 ? '1:00:00' : '1:30:00'
+      }
+    }
+
     const breakCell = worksheet.getCell(currentRow + 2, colIndex)
     breakCell.value = this.convertTimeStringToExcelValue(breakTime)
 
@@ -683,51 +706,43 @@ export class ExcelExportService {
     const noteEndRow = summaryStartRow + projects.length + 1
     const totalCol = 5 + dates.length // Cột total động
 
-    // Tạo image màu vàng (1x1 pixel PNG màu #FFFFCC)
-    // Base64 PNG 1x1 pixel màu #FFFFCC, alpha 255 (không trong suốt)
-    const yellowImageBase64 =
-      'iVBORw0KGgoAAAANSUhEUgAAACEAAAAUCAYAAAADU1RxAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAB3RJTUUH6QwPChs3fBD2/gAAADFJREFUSIntzjERADAMAzG3/KGVkzv9BUKWFwKd9jXL7nYgMTFMwARMwARMwARMwAQ+J7MD8ZuBry0AAAAASUVORK5CYII='
-    const imageBuffer = Buffer.from(yellowImageBase64, 'base64')
-
-    // Thêm image vào workbook
-    const imageId = (worksheet as any).workbook.addImage({
-      buffer: imageBuffer,
-      extension: 'png'
-    })
-
     // Tính toán vị trí và kích thước của image
     const startCol = 16 // Cột P
 
     // Thêm image vào worksheet với ImagePosition format
-    worksheet.addImage(imageId, {
-      tl: {
-        col: startCol - 1,
-        row: noteStartRow - 1
+    worksheet.addShape(
+      {
+        type: 'rect',
+        rotation: 0,
+        fill: {
+          type: 'solid',
+          color: { rgb: 'FFFFCC' }
+        },
+        outline: {
+          weight: 1,
+          color: { rgb: '000000' }
+        },
+        textBody: {
+          vertAlign: 't',
+          paragraphs: [
+            {
+              alignment: 'l',
+              runs: [
+                {
+                  text: ' ',
+                  font: {
+                    bold: false,
+                    size: 11,
+                    color: { rgb: '000000' }
+                  }
+                }
+              ]
+            }
+          ]
+        }
       },
-      ext: {
-        width: (totalCol - (startCol - 1)) * 64,
-        height: (noteEndRow - (noteStartRow - 1)) * 20
-      },
-      editAs: 'oneCell'
-    })
-
-    // Merge cells và set border
-    worksheet.mergeCells(noteStartRow, 16, noteEndRow, totalCol)
-
-    const noteCell = worksheet.getCell(noteStartRow, 16)
-    // Set nội dung ghi chú để text hiển thị trên nền ảnh vàng
-    noteCell.value = 'Ghi chú: Bạn có thể nhập nội dung ở đây.'
-    noteCell.alignment = {
-      vertical: 'top',
-      horizontal: 'left',
-      wrapText: true
-    }
-    noteCell.border = {
-      top: { style: 'thin' },
-      left: { style: 'thin' },
-      bottom: { style: 'thin' },
-      right: { style: 'thin' }
-    }
+      `${this.getColumnLetter(startCol)}${noteStartRow}:${this.getColumnLetter(totalCol)}${noteEndRow}`
+    )
 
     // Topics / Remarks
     worksheet.mergeCells(noteStartRow - 1, 16, noteStartRow - 1, 19)

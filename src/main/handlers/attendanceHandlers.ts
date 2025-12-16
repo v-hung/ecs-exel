@@ -8,6 +8,7 @@ import {
 } from '../types/attendance.type'
 import { ApiResponse } from '../types/response.type'
 import { excelExportService } from '../services/excel-export.service'
+import { formatAttendanceTimes } from '../utils/attendance.utils'
 
 /**
  * Đăng ký IPC handler cho xuất file chấm công
@@ -19,9 +20,12 @@ export function registerAttendanceHandlers(): void {
     async (_event, params: GetAttendanceParams): Promise<ApiResponse<AttendanceRecord[]>> => {
       try {
         const data = await attendanceService.getAttendanceData(params)
+
+        const attendanceDataFormatted: AttendanceRecord[] = formatAttendanceTimes(data)
+
         return {
           success: true,
-          data
+          data: attendanceDataFormatted
         }
       } catch (error) {
         console.error('Get attendance data error:', error)
@@ -47,8 +51,10 @@ export function registerAttendanceHandlers(): void {
           endDate: new Date(endDate)
         })
 
+        const attendanceDataFormatted: AttendanceRecord[] = formatAttendanceTimes(attendanceData)
+
         // Map data sang format cho export (thêm project info)
-        const exportData: AttendanceRecordForExport[] = attendanceData.map((record) => {
+        const exportData: AttendanceRecordForExport[] = attendanceDataFormatted.map((record) => {
           // Tìm user này trong danh sách users để lấy projectId
           const userInfo = users.find((u) => u.id === record.user.id)
 
@@ -56,7 +62,7 @@ export function registerAttendanceHandlers(): void {
             ...record,
             project: {
               id: userInfo ? userInfo.projectId : 0,
-              name: userInfo ? userInfo.projectName : 'N/A'
+              name: userInfo ? userInfo.projectName : ''
             }
           }
         })
